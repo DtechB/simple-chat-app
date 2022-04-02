@@ -7,6 +7,7 @@ GET_USER_BY_ID = 'SELECT * FROM Users WHERE id=?'
 GET_ROOM_BY_NAME = 'SELECT * FROM Room WHERE name=?'
 ALL_USERS_IN_ROOM = 'SELECT * FROM main.Users INNER JOIN ' \
                     'main.Room ON Users.room = Room.id WHERE room.id=?'
+ADD_USER_TO_ROOM = 'UPDATE Users SET room=? WHERE username=?'
 
 
 def insert(command, data):
@@ -20,3 +21,10 @@ def select(command, data):
         cur = conn.cursor()
         cur.execute(command, data)
         return cur.fetchall()
+
+
+def update(command, data):
+    with sqlite3.connect('db.sqlite3') as conn:
+        cur = conn.cursor()
+        cur.execute(command, data)
+        conn.commit()

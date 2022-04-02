@@ -1,8 +1,12 @@
 import socket
 import threading
 import os
-from database import user
+import time
+
+from database import user, room
 import protocol as p
+
+lock = threading.Lock()
 
 
 class Server(threading.Thread):
@@ -47,13 +51,34 @@ class ServerSocket(threading.Thread):
 
     def run(self):
         while True:
-            message = self.sc.recv(1024).decode('UTF-8')
+            message = self.sc.recv(1024).decode('ascii')
             if message:
+                print(message)
                 if message.find('Make') != -1:
                     print(message)
                     username, password = p.split_data(message)
                     msg = user.create_user(username, password)
-                    self.sc.send(msg.encode())
+                    self.sc.send(msg.encode('ascii'))
+
+                elif message.find('Connect') != -1:
+                    print(message)
+                    username, password = p.split_data(message)
+                    msg = user.login_user(username, password)
+                    self.sc.send(msg.encode('ascii'))
+
+                elif message.find('Group') != -1:
+                    print(message)
+                    username, room_name = p.split_data(message)
+                    msg = room.add_user_to_room(username, room_name)
+                    msg2 = p.s_join_welcome(username)
+                    self.sc.send(msg2.encode('ascii'))
+                    self.server.broadcast(msg, self.sock_name)
+
+                elif message.find('Users') != -1:
+                    print(message)
+                    msg = room.get_all_user_in_room('computer')
+                    self.sc.send(msg.encode('ascii'))
+                else:
                     self.server.broadcast(message, self.sock_name)
             else:
                 print(f"{self.sock_name} has closed the connection")
@@ -65,18 +90,18 @@ class ServerSocket(threading.Thread):
         self.sc.sendall(message.encode('ascii'))
 
 
-def exit_(server):
+def _exit_(server):
     while True:
         ipt = input()
         if ipt == 'q':
             print("closing all connection...")
             for connection in server.connection:
                 connection.sc.close()
-                os.exit(0)
+            os._exit(0)
 
 
 if __name__ == '__main__':
     server = Server('127.0.0.1', 50000)
     server.start()
-    finish = threading.Thread(target=exit_, args=(server,))
+    finish = threading.Thread(target=_exit_, args=(server,))
     finish.start()

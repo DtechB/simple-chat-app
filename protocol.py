@@ -24,11 +24,6 @@ def c_login(username, password):
     return f"Connect -Option <user:{username}> -Option <pass:{password}>"
 
 
-def e_c_login(msg):
-    username, password = split_data(msg)
-    return {'username': username, 'password': password}
-
-
 def s_login_connected(Id):
     return f"Connected -Option <id:{Id}>"
 
@@ -39,10 +34,6 @@ def s_login_error(reason):
 
 def c_join_room(username, roomName):
     return f"Group -Option <user:{username}> -Option <gname:{roomName}>"
-
-
-def e_c_join_room(msg):
-    return split_data(msg)
 
 
 def s_join_inform_all_users(username):
@@ -57,10 +48,6 @@ def c_get_online_users(username):
     return f"Users -Option <user:{username}>"
 
 
-def e_c_get_online_users(msg):
-    return split_data(msg)
-
-
 def s_show_online_users(data):
     users = ""
     for user in data:
@@ -72,11 +59,6 @@ def s_show_online_users(data):
 def c_send_message_all(room, msg):
     return f"GM -Option <to:{room}> -Option <message_len:{len(msg)}> " \
            f"-Option <message_body:{msg}>"
-
-
-def e_c_send_message_all(room, msg):
-    room, message_len, message_body = split_data(msg)
-    return {'room': room, 'message': message_body, 'length': message_len}
 
 
 def s_send_message_all(fromUser, room, msg):
