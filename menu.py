@@ -22,13 +22,13 @@ def choose_room():
 
 
 def main_menu():
-    print("----------------------------------------")
-    print("|          choose one option           |")
-    print("|--------------------------------------|")
-    print("| 1- list of all users in this room    |")
-    print("| 2- sending message generally         |")
-    print("| 3- sending message private           |")
-    print("| 4- leave room and exit               |")
-    print("----------------------------------------")
-    option = input("choose: ")
-    return option
+    print("-------------------------------------------------------------------")
+    print("|                             Help                                |")
+    print("|-----------------------------------------------------------------|")
+    print("| 1- list of all users in this room by typing USERS               |")
+    print("| 2- sending message generally by typing GM first of message      |")
+    print("| 3- sending message private by typing username first of message  |")
+    print("| 4- leave room by typing QUIT                                    |")
+    print("| 5- show help by typing HELP                                     |")
+    print("-------------------------------------------------------------------")
+    input("press any key to continue: ")

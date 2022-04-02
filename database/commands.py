@@ -8,6 +8,11 @@ GET_ROOM_BY_NAME = 'SELECT * FROM Room WHERE name=?'
 ALL_USERS_IN_ROOM = 'SELECT * FROM main.Users INNER JOIN ' \
                     'main.Room ON Users.room = Room.id WHERE room.id=?'
 ADD_USER_TO_ROOM = 'UPDATE Users SET room=? WHERE username=?'
+CREATE_MESSAGE = 'INSERT INTO Message(text, user) VALUES(?, ?)'
+GET_MESSAGE_BY_USER_ID = 'SELECT * FROM main.Message INNER JOIN' \
+                         ' Users U on U.id = Message.user WHERE Message.user=?'
+GET_ALL_MESSAGES = 'SELECT * FROM main.Message INNER JOIN' \
+                         ' Users U on U.id = Message.user'
 
 
 def insert(command, data):

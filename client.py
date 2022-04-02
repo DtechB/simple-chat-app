@@ -2,10 +2,10 @@ import socket
 import sys
 import threading
 import os
-import time
 import tkinter as tk
 import menu
 import protocol as p
+from database import message
 
 
 class Send(threading.Thread):
@@ -20,13 +20,27 @@ class Send(threading.Thread):
             sys.stdout.flush()
             message = sys.stdin.readline()[:-1]
             if message == 'QUIT':
-                self.sock.sendall('Server: {} has left the chat.'.format(self.name).encode('ascii'))
+                msg = p.c_leave(self.name)
+                self.sock.send(msg.encode())
                 break
             elif message == 'USERS':
                 msg = p.c_get_online_users(self.name)
                 self.sock.send(msg.encode('ascii'))
+            elif message.find('GM') != -1:
+                message = message[3:]
+                msg = p.c_send_message_all('computer', message)
+                self.sock.send(msg.encode())
+            elif message == 'HELP':
+                menu.main_menu()
             else:
-                self.sock.sendall('{}: {} '.format(self.name, message).encode('ascii'))
+                data = message.split(' ')
+                user = data[0]
+                message = ''
+                for word in data:
+                    if word != user:
+                        message += word + ' '
+                msg = p.c_send_message_private(user, message)
+                self.sock.send(msg.encode())
         print("\nQuiting")
         self.sock.close()
         os._exit(0)
@@ -41,7 +55,7 @@ class Receive(threading.Thread):
 
     def run(self):
         while True:
-            message = self.sock.recv(1024).decode('ascii')
+            message = self.sock.recv(1024).decode('UTF-8')
             if message:
                 if self.message:
                     self.message.insert(tk.END, message)
@@ -74,22 +88,10 @@ class Client:
         self.password = input("Enter your password: ")
         return p.c_login(self.username, self.password)
 
-    def options(self, send, receive):
-        option = menu.main_menu()
-        if option == '1':
-            msg = p.c_get_online_users(self.username)
-            self.sock.send(msg.encode('ascii'))
-            msg = self.sock.recv(1024).decode('ascii')
-            print(msg)
-            inp = input("type menu to show")
-            self.options(send, receive)
-        elif option == '2':
-            send.start()
-            receive.start()
-
     def start(self):
         self.sock.connect((self.host, self.port))
         print("successfully connected to {}:{}".format(self.host, self.port))
+        print(self.sock.getsockname(), ' ', self.sock.getpeername())
 
         # show menu for login or register by user
         while True:
@@ -98,19 +100,22 @@ class Client:
                 msg = self.sign_up()
             else:
                 msg = self.login()
-            self.sock.send(msg.encode('ascii'))
-            msg = self.sock.recv(1024).decode('ascii')
+            self.sock.send(msg.encode())
+            msg = self.sock.recv(1024).decode('UTF-8')
             print(msg)
-            if msg.find('Not') == -1 or msg.find('Error') == -1:
+            if msg.find('Not') == -1 or msg.find('ERROR') == -1:
                 break
-        option = menu.choose_room()
+        menu.choose_room()
         msg = p.c_join_room(self.username, 'computer')
-        self.sock.send(msg.encode('ascii'))
-        msg = self.sock.recv(1024).decode('ascii')
+        self.sock.send(msg.encode())
+        msg = self.sock.recv(1024).decode('UTF-8')
         print(msg)
 
         send = Send(self.sock, self.username)
         receive = Receive(self.sock, self.username)
+
+        menu.main_menu()
+        message.get_all_messages()
 
         send.start()
         receive.start()
@@ -122,12 +127,12 @@ class Client:
         textInput.delete(0, tk.END)
         self.message.insert(tk.END, '{}: {}'.format(self.username, message))
         if message == "QUIT":
-            self.sock.sendall('server: {} has left the room'.format(self.username).encode('ascii'))
+            self.sock.sendall('server: {} has left the room'.format(self.username).encode())
             print("\nQuiting")
             self.sock.close()
             os._exit(0)
         else:
-            self.sock.sendall('{}: {}'.format(self.username, message).encode('ascii'))
+            self.sock.sendall('{}: {}'.format(self.username, message).encode())
 
 
 def main(host, port):

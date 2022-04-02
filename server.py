@@ -1,7 +1,6 @@
 import socket
 import threading
 import os
-import time
 
 from database import user, room
 import protocol as p
@@ -38,6 +37,11 @@ class Server(threading.Thread):
             if connection.sock_name != source:
                 connection.send(message)
 
+    def send_private(self, message, username):
+        for connection in self.connection:
+            if connection.username == username:
+                connection.send(message)
+
     def remove_connection(self, connection):
         self.connection.remove(connection)
 
@@ -48,38 +52,51 @@ class ServerSocket(threading.Thread):
         self.sc = sc
         self.sock_name = sock_name
         self.server = server
+        self.username = None
 
     def run(self):
         while True:
-            message = self.sc.recv(1024).decode('ascii')
+            message = self.sc.recv(1024).decode('UTF-8')
             if message:
                 print(message)
                 if message.find('Make') != -1:
-                    print(message)
                     username, password = p.split_data(message)
+                    self.username = username
                     msg = user.create_user(username, password)
-                    self.sc.send(msg.encode('ascii'))
+                    self.sc.send(msg.encode())
 
                 elif message.find('Connect') != -1:
-                    print(message)
                     username, password = p.split_data(message)
+                    self.username = username
                     msg = user.login_user(username, password)
-                    self.sc.send(msg.encode('ascii'))
+                    self.sc.send(msg.encode())
 
                 elif message.find('Group') != -1:
-                    print(message)
                     username, room_name = p.split_data(message)
                     msg = room.add_user_to_room(username, room_name)
                     msg2 = p.s_join_welcome(username)
-                    self.sc.send(msg2.encode('ascii'))
+                    self.sc.send(msg2.encode())
                     self.server.broadcast(msg, self.sock_name)
 
                 elif message.find('Users') != -1:
-                    print(message)
                     msg = room.get_all_user_in_room('computer')
-                    self.sc.send(msg.encode('ascii'))
+                    self.sc.send(msg.encode())
+
+                elif message.find('GM') != -1:
+                    room_name, message_len, message_body = p.split_data(message)
+                    msg = p.s_send_message_all(self.username, room_name, message_body)
+                    self.server.broadcast(msg, self.sock_name)
+
+                elif message.find('END') != -1:
+                    msg = p.s_leave_user(self.username)
+                    self.sc.sendall(msg.encode())
+
+                elif message.find('QUIT') != -1:
+                    pass
                 else:
-                    self.server.broadcast(message, self.sock_name)
+                    message_len, to, message_body = p.split_data(message)
+                    msg = p.s_send_message_private(self.username, to, message_body)
+                    self.server.send_private(msg, to)
             else:
                 print(f"{self.sock_name} has closed the connection")
                 self.sc.close()
@@ -87,7 +104,7 @@ class ServerSocket(threading.Thread):
                 return
 
     def send(self, message):
-        self.sc.sendall(message.encode('ascii'))
+        self.sc.sendall(message.encode())
 
 
 def _exit_(server):
