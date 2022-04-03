@@ -6,7 +6,6 @@ import tkinter as tk
 import menu
 import protocol as p
 from database import message, room
-import hashlib
 
 
 class Send(threading.Thread):
@@ -27,7 +26,7 @@ class Send(threading.Thread):
                 break
             elif message == 'USERS':
                 msg = p.c_get_online_users(self.name)
-                self.sock.send(msg.encode('ascii'))
+                self.sock.send(msg.encode())
             elif message.find('GM') != -1:
                 message = message[3:]
                 msg = p.c_send_message_all('computer', message)
@@ -83,14 +82,12 @@ class Client:
     def sign_up(self):
         self.username = input("Enter a unique username: ")
         self.password = input("Enter your password: ")
-        password = self.password.encode()
-        return p.c_register(self.username, hashlib.sha256(password).hexdigest())
+        return p.c_register(self.username, self.password)
 
     def login(self):
         self.username = input("Enter your username: ")
         self.password = input("Enter your password: ")
-        password = self.password.encode()
-        return p.c_login(self.username, hashlib.sha256(password).hexdigest())
+        return p.c_login(self.username, self.password)
 
     def start(self):
         self.sock.connect((self.host, self.port))

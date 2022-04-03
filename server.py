@@ -6,8 +6,6 @@ from database import user, room
 from database import message as m
 import protocol as p
 
-lock = threading.Lock()
-
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -91,7 +89,10 @@ class ServerSocket(threading.Thread):
 
                 elif message.find('End') != -1:
                     msg = p.s_leave_user(self.username)
-                    self.sc.sendall(msg.encode())
+                    self.server.broadcast(msg, self.sock_name)
+                    self.server.remove_connection(self)
+                    self.sc.close()
+                    return
 
                 elif message.find('QUIT') != -1:
                     pass
