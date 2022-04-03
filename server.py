@@ -3,6 +3,7 @@ import threading
 import os
 
 from database import user, room
+from database import message as m
 import protocol as p
 
 lock = threading.Lock()
@@ -85,9 +86,10 @@ class ServerSocket(threading.Thread):
                 elif message.find('GM') != -1:
                     room_name, message_len, message_body = p.split_data(message)
                     msg = p.s_send_message_all(self.username, room_name, message_body)
+                    m.save_message(msg, self.username)
                     self.server.broadcast(msg, self.sock_name)
 
-                elif message.find('END') != -1:
+                elif message.find('End') != -1:
                     msg = p.s_leave_user(self.username)
                     self.sc.sendall(msg.encode())
 
@@ -96,6 +98,7 @@ class ServerSocket(threading.Thread):
                 else:
                     message_len, to, message_body = p.split_data(message)
                     msg = p.s_send_message_private(self.username, to, message_body)
+                    m.save_message(msg, self.username)
                     self.server.send_private(msg, to)
             else:
                 print(f"{self.sock_name} has closed the connection")

@@ -13,6 +13,7 @@ GET_MESSAGE_BY_USER_ID = 'SELECT * FROM main.Message INNER JOIN' \
                          ' Users U on U.id = Message.user WHERE Message.user=?'
 GET_ALL_MESSAGES = 'SELECT * FROM main.Message INNER JOIN' \
                          ' Users U on U.id = Message.user'
+REMOVE_USER_FROM_ROOM = 'UPDATE Users SET room=null WHERE username=?'
 
 
 def insert(command, data):

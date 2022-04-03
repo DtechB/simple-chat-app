@@ -5,7 +5,8 @@ import os
 import tkinter as tk
 import menu
 import protocol as p
-from database import message
+from database import message, room
+import hashlib
 
 
 class Send(threading.Thread):
@@ -22,6 +23,7 @@ class Send(threading.Thread):
             if message == 'QUIT':
                 msg = p.c_leave(self.name)
                 self.sock.send(msg.encode())
+                room.remove_user_from_room(self.name)
                 break
             elif message == 'USERS':
                 msg = p.c_get_online_users(self.name)
@@ -81,12 +83,14 @@ class Client:
     def sign_up(self):
         self.username = input("Enter a unique username: ")
         self.password = input("Enter your password: ")
-        return p.c_register(self.username, self.password)
+        password = self.password.encode()
+        return p.c_register(self.username, hashlib.sha256(password).hexdigest())
 
     def login(self):
         self.username = input("Enter your username: ")
         self.password = input("Enter your password: ")
-        return p.c_login(self.username, self.password)
+        password = self.password.encode()
+        return p.c_login(self.username, hashlib.sha256(password).hexdigest())
 
     def start(self):
         self.sock.connect((self.host, self.port))
@@ -103,7 +107,7 @@ class Client:
             self.sock.send(msg.encode())
             msg = self.sock.recv(1024).decode('UTF-8')
             print(msg)
-            if msg.find('Not') == -1 or msg.find('ERROR') == -1:
+            if msg.find('reason') == -1:
                 break
         menu.choose_room()
         msg = p.c_join_room(self.username, 'computer')
