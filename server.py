@@ -88,6 +88,7 @@ class ServerSocket(threading.Thread):
                     self.server.broadcast(msg, self.sock_name)
 
                 elif message.find('End') != -1:
+                    room.remove_user_from_room(self.username)
                     msg = p.s_leave_user(self.username)
                     self.server.broadcast(msg, self.sock_name)
                     self.server.remove_connection(self)
