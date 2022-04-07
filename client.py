@@ -2,7 +2,6 @@ import socket
 import sys
 import threading
 import os
-import tkinter as tk
 import menu
 import protocol as p
 from database import message, room
@@ -58,11 +57,7 @@ class Receive(threading.Thread):
         while True:
             message = self.sock.recv(1024).decode('UTF-8')
             if message:
-                if self.message:
-                    self.message.insert(tk.END, message)
-                    print('\r{}\n{}: '.format(message, self.name), end='')
-                else:
-                    print('\r{}\n{}: '.format(message, self.name), end='')
+                print('\r{}\n{}: '.format(message, self.name), end='')
             else:
                 print("\nlost connection")
                 self.sock.close()
@@ -116,60 +111,17 @@ class Client:
         receive = Receive(self.sock, self.username)
 
         menu.main_menu()
-        message.get_all_messages()
+        message.get_all_messages(self.username)
 
         send.start()
         receive.start()
 
         return receive
 
-    def send(self, textInput):
-        message = textInput.get()
-        textInput.delete(0, tk.END)
-        self.message.insert(tk.END, '{}: {}'.format(self.username, message))
-        if message == "QUIT":
-            self.sock.sendall('server: {} has left the room'.format(self.username).encode())
-            print("\nQuiting")
-            self.sock.close()
-            os._exit(0)
-        else:
-            self.sock.sendall('{}: {}'.format(self.username, message).encode())
-
 
 def main(host, port):
     client = Client(host, port)
     receive = client.start()
-
-    window = tk.Tk()
-    window.title('chatroom')
-    from_message = tk.Frame(master=window)
-    scroll_bar = tk.Scrollbar(master=from_message)
-    message = tk.Listbox(master=from_message, yscrollcommand=scroll_bar.set)
-    scroll_bar.pack(side=tk.RIGHT, fill=tk.Y, expand=False)
-    message.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    client.message = message
-    receive.message = message
-    from_message.grid(row=0, column=0, columnspan=2, sticky="nsew")
-    from_entry = tk.Frame(master=window)
-    text_input = tk.Entry(master=from_entry)
-    text_input.pack(fill=tk.BOTH, expand=True)
-    text_input.bind("<Return>", lambda x: client.send(text_input))
-    text_input.insert(0, "write your message here.")
-
-    btn_send = tk.Button(
-        master=window,
-        text="Send",
-        command=lambda: client.send(text_input)
-    )
-    from_entry.grid(row=1, column=0, padx=10, sticky="ew")
-    btn_send.grid(row=1, column=1, pady=10, sticky="ew")
-
-    window.rowconfigure(0, minsize=500, weight=1)
-    window.rowconfigure(1, minsize=50, weight=0)
-    window.columnconfigure(0, minsize=500, weight=1)
-    window.columnconfigure(1, minsize=200, weight=0)
-
-    window.mainloop()
 
 
 if __name__ == "__main__":
