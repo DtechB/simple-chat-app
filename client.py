@@ -59,7 +59,7 @@ class Receive(threading.Thread):
             if message:
                 print('\r{}\n{}: '.format(message, self.name), end='')
             else:
-                print("\nlost connection")
+                print("\nleave bye")
                 self.sock.close()
                 os._exit(0)
 
@@ -86,7 +86,7 @@ class Client:
 
     def start(self):
         self.sock.connect((self.host, self.port))
-        print("successfully connected to {}:{}".format(self.host, self.port))
+        print(f"successfully connected to {self.host}:{self.port}")
         print(self.sock.getsockname(), ' ', self.sock.getpeername())
 
         # show menu for login or register by user

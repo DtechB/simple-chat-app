@@ -85,7 +85,8 @@ class ServerSocket(threading.Thread):
                     room_name, message_len, message_body = p.split_data(message)
                     msg = p.s_send_message_all(self.username, room_name, message_body)
                     m.save_message(msg, self.username)
-                    self.server.broadcast(msg, self.sock_name)
+                    # self.server.broadcast(msg, self.sock_name)
+                    self.server.broadcast(f"{self.username}: {message_body}", self.sock_name)
 
                 elif message.find('End') != -1:
                     room.remove_user_from_room(self.username)
@@ -101,7 +102,8 @@ class ServerSocket(threading.Thread):
                     message_len, to, message_body = p.split_data(message)
                     msg = p.s_send_message_private(self.username, to, message_body)
                     m.save_message(msg, self.username)
-                    self.server.send_private(msg, to)
+                    # self.server.send_private(msg, to)
+                    self.server.send_private(f"{self.username}: {message_body}", to)
             else:
                 print(f"{self.sock_name} has closed the connection")
                 self.sc.close()
