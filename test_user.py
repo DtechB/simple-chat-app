@@ -26,6 +26,9 @@ class TestUser(unittest.TestCase):
         self.assertTrue(len('ad') >= 3)
         self.assertTrue(len('ad') >= 3)
         self.assertTrue(len('Mahmud') >= 3)
+        username, password = input("Enter username and password")
+        self.assertTrue(len(username) >= 3 and len(username) <= 20)
+        self.assertTrue(len(password) >= 6 and len(password) <= 16)
 
     def test_login(self):
         msg1 = login_user(
@@ -34,6 +37,12 @@ class TestUser(unittest.TestCase):
 
         self.assertTrue(msg1.find('Connected') != -1)
         self.assertTrue(msg2.find('Connected') != -1)
+
+        # (Equivalence Partitioning)
+        username = input("Enter a valid username: ")
+        password = input("Enter a valid password: ")
+        self.assertTrue(len(username) >= 3 and len(username) <= 20)
+        self.assertTrue(len(password) >= 6 and len(password) <= 16)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,5 @@
+title: dnsdbq tests
+suite: all
+output: output.yaml
+tests:
+  - py: print("Hello")
